@@ -1,21 +1,15 @@
 # app/services/user.py
 from typing import List, Optional
-from fastapi import Depends, status, Query
+from datetime import date as dt_date
+from fastapi import Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
-from fastapi import HTTPException, status
+from sqlalchemy import select, func, or_
 from app.models.user import User
-from app.api.v1.schema.user import UserCreate, UserUpdate
-from app.core.session import get_db
 from app.models.groups import Group
 from app.models.positions import Position
-from fastapi.responses import JSONResponse
-from fastapi import Query, Depends
-from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from datetime import date as dt_date
 from app.models.user_access import UserAccess
+from app.api.v1.schema.user import UserCreate, UserUpdate
 from app.core.database import get_db
 
 
@@ -209,7 +203,6 @@ class UserService:
         result = await db.execute(query)
         return result.scalar()
 
-from fastapi import Query
 
 async def get_staff(
     skip: int = Query(0, ge=0),
@@ -326,7 +319,7 @@ async def get_students(
     search: str | None = Query(None, description="Search by name, surname, identification, or card no"),
     gender: int | None = Query(None, ge=0, le=2),
     position: int | None = None,
-    group_number: int | None = None,
+    group_number: str | None = None,
     date: dt_date | None = None,
     db: AsyncSession = Depends(get_db)
 ):

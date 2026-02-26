@@ -7,7 +7,7 @@ from app.services.auth import AuthService
 from app.core.security import get_current_user
 from app.models.auth import Auth
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter()
 
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)

@@ -1,5 +1,7 @@
+import os
 import bcrypt
 import jwt
+from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, status
@@ -10,12 +12,14 @@ from app.core.database import get_db
 from app.models.auth import Auth
 from app.api.v1.schema.auth import TokenData
 
+load_dotenv()
+
 # Configuration
-SECRET_KEY = "your-secret-key-here-change-in-production"
+SECRET_KEY = os.getenv("SECRET_KEY", "change-this-secret-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/signin")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/signin")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

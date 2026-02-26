@@ -159,7 +159,7 @@ async def get_students_endpoint(
     search: Optional[str] = Query(None, description="Search by name, surname, identification, or card no"),
     gender: Optional[int] = Query(None, ge=0, le=2),
     position: Optional[int] = Query(None, ge=0),
-    group_number: Optional[int] = Query(None, ge=0),
+    group_number: Optional[str] = Query(None),
     date: Optional[str] = Query(None, description="Filter by specific date in YYYY-MM-DD"),
     db: AsyncSession = Depends(get_db)
 ):
