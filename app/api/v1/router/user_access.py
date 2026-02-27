@@ -31,9 +31,9 @@ async def create_access_record(
 async def get_access_records(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    employee_id: Optional[int] = Query(None),
+    employee_id: Optional[str] = Query(None),
     card_no: Optional[str] = Query(None),
-    direction: Optional[int] = Query(None, ge=1, le=2),
+    direction: Optional[str] = Query(None),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     device_name: Optional[str] = Query(None),
@@ -69,7 +69,7 @@ async def get_access_status(
 
 @router.get("/employee/{employee_id}", response_model=List[UserAccessResponse])
 async def get_employee_access(
-    employee_id: int,
+    employee_id: str,
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     db: AsyncSession = Depends(get_db),
@@ -81,10 +81,10 @@ async def get_employee_access(
 
 @router.get("/count")
 async def get_access_count(
-    employee_id: Optional[int] = Query(None),
+    employee_id: Optional[str] = Query(None),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
-    direction: Optional[int] = Query(None, ge=1, le=2),
+    direction: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     # current_user: Auth = Depends(get_current_user)
 ):
@@ -95,7 +95,7 @@ async def get_access_count(
 
 @router.get("/details/{access_id}", response_model=UserAccessResponse)
 async def get_access_record(
-    access_id: int,
+    access_id: str,
     db: AsyncSession = Depends(get_db),
     # current_user: Auth = Depends(get_current_user)
 ):
@@ -105,7 +105,7 @@ async def get_access_record(
 
 @router.put("/edit/details/{access_id}", response_model=UserAccessResponse)
 async def update_access_record(
-    access_id: int,
+    access_id: str,
     access_data: UserAccessUpdate,
     db: AsyncSession = Depends(get_db),
     # current_user: Auth = Depends(get_current_user)
@@ -116,7 +116,7 @@ async def update_access_record(
 
 @router.delete("/{access_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_access_record(
-    access_id: int,
+    access_id: str,
     db: AsyncSession = Depends(get_db),
     # current_user: Auth = Depends(get_current_user)
 ):
