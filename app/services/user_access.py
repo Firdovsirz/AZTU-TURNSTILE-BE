@@ -45,9 +45,9 @@ class UserAccessService:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         device_name: Optional[str] = None
-    ) -> List[UserAccess]:
+    ) -> List[dict]:
         """Get all user access records with pagination and filters"""
-        query = select(UserAccess)
+        query = select(UserAccess.__table__)
 
         if employee_id is not None:
             query = query.filter(UserAccess.employee_id == employee_id)
@@ -69,7 +69,7 @@ class UserAccessService:
 
         query = query.order_by(UserAccess.access_date_time.desc()).offset(skip).limit(limit)
         result = await db.execute(query)
-        return [r for r in result.scalars().all() if r is not None]
+        return [dict(row) for row in result.mappings().all()]
 
     @staticmethod
     async def get_access_status(
@@ -175,9 +175,9 @@ class UserAccessService:
         employee_id: str,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None
-    ) -> List[UserAccess]:
+    ) -> List[dict]:
         """Get all access records for a specific employee"""
-        query = select(UserAccess).filter(UserAccess.employee_id == employee_id)
+        query = select(UserAccess.__table__).filter(UserAccess.employee_id == employee_id)
 
         if start_date and end_date:
             query = query.filter(
@@ -191,7 +191,7 @@ class UserAccessService:
 
         query = query.order_by(UserAccess.access_date_time.desc())
         result = await db.execute(query)
-        return list(result.scalars().all())
+        return [dict(row) for row in result.mappings().all()]
 
     @staticmethod
     async def update(

@@ -32,7 +32,7 @@ class UserAccessUpdate(BaseModel):
 
 
 class UserAccessResponse(UserAccessBase):
-    id: str
+    id: Optional[str] = None
 
     class Config:
         from_attributes = True
