@@ -69,7 +69,7 @@ class UserAccessService:
 
         query = query.order_by(UserAccess.access_date_time.desc()).offset(skip).limit(limit)
         result = await db.execute(query)
-        return list(result.scalars().all())
+        return [r for r in result.scalars().all() if r is not None]
 
     @staticmethod
     async def get_access_status(
