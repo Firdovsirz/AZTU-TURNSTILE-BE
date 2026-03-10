@@ -172,12 +172,12 @@ class UserAccessService:
     @staticmethod
     async def get_by_employee(
         db: AsyncSession,
-        employee_id: str,
+        card_no: str,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None
     ) -> List[dict]:
         """Get all access records for a specific employee"""
-        query = select(UserAccess.__table__).filter(UserAccess.employee_id == employee_id)
+        query = select(UserAccess.__table__).filter(UserAccess.card_no == card_no)
 
         if start_date and end_date:
             query = query.filter(

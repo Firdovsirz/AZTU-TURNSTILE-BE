@@ -66,16 +66,16 @@ async def get_access_status(
     )
 
 
-@router.get("/employee/{employee_id}", response_model=List[UserAccessResponse])
+@router.get("/employee/{card_no}", response_model=List[UserAccessResponse])
 async def get_employee_access(
-    employee_id: str,
+    card_no: str,
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     db: AsyncSession = Depends(get_db),
     # current_user: Auth = Depends(get_current_user)
 ):
-    """Get all access records for a specific employee"""
-    return await UserAccessService.get_by_employee(db, employee_id, start_date, end_date)
+    """Get all access records for a specific employee by card number"""
+    return await UserAccessService.get_by_employee(db, card_no, start_date, end_date)
 
 
 @router.get("/count")
