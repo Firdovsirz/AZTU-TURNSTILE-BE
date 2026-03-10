@@ -45,7 +45,6 @@ async def get_access_records(
         db, skip, limit, employee_id, card_no, direction, start_date, end_date, device_name
     )
 
-
 @router.get("/status", response_model=List[UserAccessStatus])
 async def get_access_status(
     accessed: bool = Query(True, description="True for users who accessed, False for users who didn't"),

@@ -5,7 +5,7 @@ from datetime import datetime
 
 class GroupBase(BaseModel):
     group_id: int = Field(..., gt=0)
-    group: str = Field(..., min_length=1, max_length=255)
+    group_name: str = Field(..., min_length=1, max_length=255)
 
 
 class GroupCreate(GroupBase):
@@ -14,7 +14,7 @@ class GroupCreate(GroupBase):
 
 class GroupUpdate(BaseModel):
     group_id: int | None = Field(None, gt=0)
-    group: str | None = Field(None, min_length=1, max_length=255)
+    group_name: str | None = Field(None, min_length=1, max_length=255)
 
 
 class GroupResponse(GroupBase):

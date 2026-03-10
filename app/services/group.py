@@ -145,7 +145,7 @@ async def get_groups(
         for group in groups:
             group_obj = {
                 "group_id": group.group_id,
-                "group": group.group
+                "group_name": group.group_name
             }
 
             groups_arr.append(group_obj)
