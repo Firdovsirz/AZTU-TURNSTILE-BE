@@ -4,31 +4,31 @@ from typing import Optional
 
 
 class UserAccessBase(BaseModel):
-    employee_id: str = Field(..., min_length=1, max_length=256)
-    access_date_time: str = Field(..., min_length=1, max_length=256)
-    access_date: str = Field(..., min_length=1, max_length=256)
-    access_time: str = Field(..., min_length=1, max_length=256)
-    device_name: str = Field(..., min_length=1, max_length=256)
-    device_serial_number: str = Field(..., min_length=1, max_length=256)
-    person_name: str = Field(..., min_length=1, max_length=256)
-    card_no: str = Field(..., min_length=1, max_length=256)
-    direction: str = Field(..., min_length=1, max_length=256)
+    employee_id: str = Field(..., max_length=256)
+    access_date_time: str = Field(..., max_length=256)
+    access_date: str = Field(..., max_length=256)
+    access_time: str = Field(..., max_length=256)
+    device_name: str = Field(..., max_length=256)
+    device_serial_number: str = Field(..., max_length=256)
+    person_name: str = Field(..., max_length=256)
+    card_no: str = Field(..., max_length=256)
+    direction: str = Field(..., max_length=256)
 
 
 class UserAccessCreate(UserAccessBase):
-    id: str = Field(..., min_length=1, max_length=256)
+    id: str = Field(..., max_length=256)
 
 
 class UserAccessUpdate(BaseModel):
-    employee_id: Optional[str] = Field(None, min_length=1, max_length=256)
-    access_date_time: Optional[str] = Field(None, min_length=1, max_length=256)
-    access_date: Optional[str] = Field(None, min_length=1, max_length=256)
-    access_time: Optional[str] = Field(None, min_length=1, max_length=256)
-    device_name: Optional[str] = Field(None, min_length=1, max_length=256)
-    device_serial_number: Optional[str] = Field(None, min_length=1, max_length=256)
-    person_name: Optional[str] = Field(None, min_length=1, max_length=256)
-    card_no: Optional[str] = Field(None, min_length=1, max_length=256)
-    direction: Optional[str] = Field(None, min_length=1, max_length=256)
+    employee_id: Optional[str] = Field(None, max_length=256)
+    access_date_time: Optional[str] = Field(None, max_length=256)
+    access_date: Optional[str] = Field(None, max_length=256)
+    access_time: Optional[str] = Field(None, max_length=256)
+    device_name: Optional[str] = Field(None, max_length=256)
+    device_serial_number: Optional[str] = Field(None, max_length=256)
+    person_name: Optional[str] = Field(None, max_length=256)
+    card_no: Optional[str] = Field(None, max_length=256)
+    direction: Optional[str] = Field(None, max_length=256)
 
 
 class UserAccessResponse(UserAccessBase):

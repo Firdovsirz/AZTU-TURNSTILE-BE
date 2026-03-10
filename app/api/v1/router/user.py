@@ -39,7 +39,7 @@ async def get_users(
 
 @router.get("/search", response_model=List[UserResponse])
 async def search_users(
-    q: str = Query(..., min_length=1),
+    q: str = Query(...),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
