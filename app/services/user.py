@@ -87,11 +87,12 @@ class UserService:
         limit: int = 100,
         group: Optional[int] = None,
         position: Optional[int] = None,
-        gender: Optional[int] = None
-    ) -> List[User]:
+        gender: Optional[int] = None,
+        date: Optional[dt_date] = None
+    ) -> List:
         """Get all users with pagination and optional filters"""
         query = select(User)
-        
+
         # Apply filters
         if group is not None:
             query = query.filter(User.group == group)
@@ -99,10 +100,46 @@ class UserService:
             query = query.filter(User.position == position)
         if gender is not None:
             query = query.filter(User.gender == gender)
-        
+
         query = query.offset(skip).limit(limit)
         result = await db.execute(query)
-        return list(result.scalars().all())
+        users = list(result.scalars().all())
+
+        if date is None:
+            return users
+
+        # Fetch access data for each user on the given date
+        enriched = []
+        for user in users:
+            access_result = await db.execute(
+                select(UserAccess)
+                .where(
+                    UserAccess.card_no == user.card_no,
+                    UserAccess.access_date == str(date)
+                )
+                .order_by(UserAccess.access_time)
+            )
+            accesses = access_result.scalars().all()
+
+            first_entrance = next((a for a in accesses if a.direction == "1"), None)
+            last_exit = next((a for a in reversed(accesses) if a.direction == "2"), None)
+
+            enriched.append({
+                "id": user.id,
+                "card_no": user.card_no,
+                "name": user.name,
+                "surname": user.surname,
+                "gender": user.gender,
+                "identification": user.identification,
+                "group_number": user.group_number,
+                "group": user.group,
+                "position": user.position,
+                "created_at": user.created_at,
+                "enter": first_entrance.access_time if first_entrance else None,
+                "exit": last_exit.access_time if last_exit else None,
+            })
+
+        return enriched
     
     @staticmethod
     async def search(

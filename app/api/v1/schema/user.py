@@ -33,6 +33,8 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase):
     id: int
     created_at: datetime
-    
+    enter: Optional[str] = None
+    exit: Optional[str] = None
+
     class Config:
         from_attributes = True
