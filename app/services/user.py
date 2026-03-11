@@ -127,7 +127,7 @@ class UserService:
                 )
                 .order_by(UserAccess.access_time)
             )
-            accesses = access_result.scalars().all()
+            accesses = [a for a in access_result.scalars().all() if a is not None]
 
             first_entrance = next((a for a in accesses if str(a.direction) == "1"), None)
             last_exit = next((a for a in reversed(accesses) if str(a.direction) == "2"), None)
