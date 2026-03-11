@@ -120,17 +120,17 @@ class UserService:
         enriched = []
         for user in users:
             access_result = await db.execute(
-                select(UserAccess)
+                select(UserAccess.__table__)
                 .where(
                     UserAccess.card_no == user.card_no,
                     UserAccess.access_date == str(filter_date)
                 )
                 .order_by(UserAccess.access_time)
             )
-            accesses = [a for a in access_result.scalars().all() if a is not None]
+            accesses = [dict(row) for row in access_result.mappings().all()]
 
-            first_entrance = next((a for a in accesses if str(a.direction) == "1"), None)
-            last_exit = next((a for a in reversed(accesses) if str(a.direction) == "2"), None)
+            first_entrance = next((a for a in accesses if str(a.get("direction")) == "1"), None)
+            last_exit = next((a for a in reversed(accesses) if str(a.get("direction")) == "2"), None)
 
             enriched.append({
                 "id": user.id,
@@ -143,8 +143,8 @@ class UserService:
                 "group": user.group,
                 "position": user.position,
                 "created_at": user.created_at,
-                "enter": first_entrance.access_time if first_entrance else None,
-                "exit": last_exit.access_time if last_exit else None,
+                "enter": first_entrance.get("access_time") if first_entrance else None,
+                "exit": last_exit.get("access_time") if last_exit else None,
             })
 
         return enriched
