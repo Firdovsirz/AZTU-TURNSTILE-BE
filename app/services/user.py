@@ -89,7 +89,8 @@ class UserService:
         position: Optional[int] = None,
         gender: Optional[int] = None,
         date: Optional[dt_date] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        accessed: Optional[bool] = None
     ) -> List:
         """Get all users with pagination and optional filters"""
         query = select(User)
@@ -146,6 +147,11 @@ class UserService:
                 "enter": first_entrance.get("access_time") if first_entrance else None,
                 "exit": last_exit.get("access_time") if last_exit else None,
             })
+
+        if accessed is True:
+            enriched = [u for u in enriched if u["enter"] is not None]
+        elif accessed is False:
+            enriched = [u for u in enriched if u["enter"] is None]
 
         return enriched
     
