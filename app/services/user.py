@@ -113,8 +113,8 @@ class UserService:
         result = await db.execute(query)
         users = list(result.scalars().all())
 
-        if date is None:
-            return users
+        # Default to today if no date provided
+        filter_date = date or dt_date.today()
 
         # Fetch access data for each user on the given date
         enriched = []
@@ -123,14 +123,14 @@ class UserService:
                 select(UserAccess)
                 .where(
                     UserAccess.card_no == user.card_no,
-                    UserAccess.access_date == str(date)
+                    UserAccess.access_date == str(filter_date)
                 )
                 .order_by(UserAccess.access_time)
             )
             accesses = access_result.scalars().all()
 
-            first_entrance = next((a for a in accesses if a.direction == "1"), None)
-            last_exit = next((a for a in reversed(accesses) if a.direction == "2"), None)
+            first_entrance = next((a for a in accesses if str(a.direction) == "1"), None)
+            last_exit = next((a for a in reversed(accesses) if str(a.direction) == "2"), None)
 
             enriched.append({
                 "id": user.id,
