@@ -88,12 +88,20 @@ class UserService:
         group: Optional[int] = None,
         position: Optional[int] = None,
         gender: Optional[int] = None,
-        date: Optional[dt_date] = None
+        date: Optional[dt_date] = None,
+        search: Optional[str] = None
     ) -> List:
         """Get all users with pagination and optional filters"""
         query = select(User)
 
         # Apply filters
+        if search is not None:
+            query = query.filter(
+                or_(
+                    User.name.ilike(f"%{search}%"),
+                    User.surname.ilike(f"%{search}%"),
+                )
+            )
         if group is not None:
             query = query.filter(User.group == group)
         if position is not None:

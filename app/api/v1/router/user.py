@@ -30,6 +30,7 @@ async def get_users(
     group: Optional[int] = Query(None),
     position: Optional[int] = Query(None),
     gender: Optional[int] = Query(None, ge=0, le=2),
+    search: Optional[str] = Query(None, description="Search by name or surname"),
     date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD) to include enter/exit access data"),
     db: AsyncSession = Depends(get_db),
     # current_user: Auth = Depends(get_current_user)
@@ -42,7 +43,7 @@ async def get_users(
         except ValueError:
             from fastapi import HTTPException
             raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
-    return await UserService.get_all(db, skip, limit, group, position, gender, filter_date)
+    return await UserService.get_all(db, skip, limit, group, position, gender, filter_date, search)
 
 
 @router.get("/search", response_model=List[UserResponse])
