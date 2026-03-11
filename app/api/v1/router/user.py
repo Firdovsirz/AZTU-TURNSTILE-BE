@@ -47,6 +47,27 @@ async def get_users(
     return await UserService.get_all(db, skip, limit, group, position, gender, filter_date, search, accessed)
 
 
+@router.get("/export/excel")
+async def export_users_excel(
+    group: Optional[int] = Query(None),
+    position: Optional[int] = Query(None),
+    gender: Optional[int] = Query(None, ge=0, le=2),
+    search: Optional[str] = Query(None, description="Search by name or surname"),
+    date: Optional[str] = Query(None, description="Specific date (YYYY-MM-DD); defaults to current month if omitted"),
+    accessed: Optional[bool] = Query(None, description="true=has access, false=no access"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export users to Excel with access data. If no date given, exports current month."""
+    filter_date = None
+    if date:
+        try:
+            filter_date = datetime.strptime(date, "%Y-%m-%d").date()
+        except ValueError:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+    return await UserService.export_excel(db, group, position, gender, filter_date, search, accessed)
+
+
 @router.get("/search", response_model=List[UserResponse])
 async def search_users(
     q: str = Query(...),

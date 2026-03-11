@@ -1,10 +1,14 @@
 # app/services/user.py
 from typing import List, Optional
 from datetime import date as dt_date
+import calendar
+import io
 from fastapi import Depends, HTTPException, Query, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, and_
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
 from app.models.user import User
 from app.models.groups import Group
 from app.models.positions import Position
@@ -253,6 +257,165 @@ class UserService:
         
         result = await db.execute(query)
         return result.scalar()
+
+    @staticmethod
+    async def export_excel(
+        db: AsyncSession,
+        group: Optional[int] = None,
+        position: Optional[int] = None,
+        gender: Optional[int] = None,
+        date: Optional[dt_date] = None,
+        search: Optional[str] = None,
+        accessed: Optional[bool] = None
+    ) -> StreamingResponse:
+        """Export users with access data to Excel"""
+        today = dt_date.today()
+        is_monthly = date is None
+
+        # Build user query
+        query = select(User)
+        if search is not None:
+            query = query.filter(
+                or_(
+                    User.name.ilike(f"%{search}%"),
+                    User.surname.ilike(f"%{search}%"),
+                )
+            )
+        if group is not None:
+            query = query.filter(User.group == group)
+        if position is not None:
+            query = query.filter(User.position == position)
+        if gender is not None:
+            query = query.filter(User.gender == gender)
+
+        result = await db.execute(query)
+        users = list(result.scalars().all())
+
+        wb = Workbook()
+        ws = wb.active
+
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+        center = Alignment(horizontal="center", vertical="center")
+
+        if is_monthly:
+            # Monthly export: one row per user per access day
+            month_start = today.replace(day=1)
+            last_day = calendar.monthrange(today.year, today.month)[1]
+            month_end = today.replace(day=last_day)
+
+            headers = ["#", "Name", "Surname", "Gender", "Identification", "Card No",
+                       "Group Number", "Group", "Position", "Date", "Enter", "Exit"]
+            ws.append(headers)
+
+            for col_num, _ in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col_num)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = center
+
+            row_idx = 2
+            for user in users:
+                access_result = await db.execute(
+                    select(UserAccess.__table__)
+                    .where(
+                        and_(
+                            UserAccess.card_no == user.card_no,
+                            UserAccess.access_date >= str(month_start),
+                            UserAccess.access_date <= str(month_end)
+                        )
+                    )
+                    .order_by(UserAccess.access_date, UserAccess.access_time)
+                )
+                accesses = [dict(row) for row in access_result.mappings().all()]
+
+                # Group by date
+                days: dict = {}
+                for a in accesses:
+                    d = a.get("access_date")
+                    days.setdefault(d, []).append(a)
+
+                if not days:
+                    if accessed is True:
+                        continue
+                    ws.append([
+                        row_idx - 1, user.name, user.surname, user.gender,
+                        user.identification, user.card_no,
+                        user.group_number, user.group, user.position,
+                        None, None, None
+                    ])
+                    row_idx += 1
+                    continue
+
+                for day, day_accesses in sorted(days.items()):
+                    enter = next((a.get("access_time") for a in day_accesses if str(a.get("direction")) == "1"), None)
+                    exit_ = next((a.get("access_time") for a in reversed(day_accesses) if str(a.get("direction")) == "2"), None)
+                    ws.append([
+                        row_idx - 1, user.name, user.surname, user.gender,
+                        user.identification, user.card_no,
+                        user.group_number, user.group, user.position,
+                        day, enter, exit_
+                    ])
+                    row_idx += 1
+
+            filename = f"users_{today.year}_{today.month:02d}.xlsx"
+
+        else:
+            # Single date export: one row per user
+            headers = ["#", "Name", "Surname", "Gender", "Identification", "Card No",
+                       "Group Number", "Group", "Position", "Date", "Enter", "Exit"]
+            ws.append(headers)
+
+            for col_num, _ in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col_num)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = center
+
+            row_idx = 2
+            for user in users:
+                access_result = await db.execute(
+                    select(UserAccess.__table__)
+                    .where(
+                        UserAccess.card_no == user.card_no,
+                        UserAccess.access_date == str(date)
+                    )
+                    .order_by(UserAccess.access_time)
+                )
+                day_accesses = [dict(row) for row in access_result.mappings().all()]
+
+                enter = next((a.get("access_time") for a in day_accesses if str(a.get("direction")) == "1"), None)
+                exit_ = next((a.get("access_time") for a in reversed(day_accesses) if str(a.get("direction")) == "2"), None)
+
+                if accessed is True and enter is None:
+                    continue
+                if accessed is False and enter is not None:
+                    continue
+
+                ws.append([
+                    row_idx - 1, user.name, user.surname, user.gender,
+                    user.identification, user.card_no,
+                    user.group_number, user.group, user.position,
+                    str(date), enter, exit_
+                ])
+                row_idx += 1
+
+            filename = f"users_{date}.xlsx"
+
+        # Auto-size columns
+        for col in ws.columns:
+            max_len = max((len(str(cell.value)) for cell in col if cell.value), default=10)
+            ws.column_dimensions[col[0].column_letter].width = max_len + 4
+
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+
+        return StreamingResponse(
+            buf,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
 
 
 async def get_staff(
